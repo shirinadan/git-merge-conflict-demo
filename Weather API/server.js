@@ -29,7 +29,9 @@ app.get("/weather/:city", async (req, res) => {
     // HINT: If the route is /weather/:city, then the city value
     //       is accessed with req.params.city
     // YOUR CODE HERE:
-    const city = // ??? How do you get the city from the URL?
+    try { 
+    const city = req.params.city;
+     // ??? How do you get the city from the URL?
 
 
     // -------------------------------------------------------
@@ -44,12 +46,13 @@ app.get("/weather/:city", async (req, res) => {
     //
     // YOUR CODE HERE:
     const geoRes = await fetch(
-        // ??? Build the full URL by adding the city name to the end
+        "https://geocoding-api.open-meteo.com/v1/search?name=" + city
     );
 
     // HINT: Use .json() to convert the response into a JavaScript object
     // YOUR CODE HERE:
-    const geoData = // ??? How do you convert the response to JSON?
+    const geoData = await geoRes.json();
+    // ??? How do you convert the response to JSON?
 
 
     // -------------------------------------------------------
@@ -62,8 +65,8 @@ app.get("/weather/:city", async (req, res) => {
     //       { message: "City not found" }
     //
     // YOUR CODE HERE:
-    if(/* ??? When would there be no results? */){
-        return res.status(404).json({ message: // ??? });
+    if(!geoData.results || geoData.results.length === 0){
+        return res.status(404).json({ message: "City not found"});
     }
 
 
@@ -74,8 +77,8 @@ app.get("/weather/:city", async (req, res) => {
     // HINT: Latitude is stored in .latitude, longitude in .longitude
     //
     // YOUR CODE HERE:
-    const lat = // ??? Get latitude from the first result
-    const lon = // ??? Get longitude from the first result
+    const lat = geoData.results[0].latitude;// ??? Get latitude from the first result
+    const lon = geoData.results[0].longitude;// ??? Get longitude from the first result
 
 
     // -------------------------------------------------------
@@ -91,12 +94,16 @@ app.get("/weather/:city", async (req, res) => {
     //
     // YOUR CODE HERE:
     const weatherRes = await fetch(
-        // ??? Build the full URL using lat and lon
+        "https://api.open-meteo.com/v1/forecast?latitude=" +
+        lat +
+        "&longitude=" +
+        lon +
+        "&current_weather=true&temperature_unit=fahrenheit"    
     );
 
     // HINT: Convert the weather response to JSON just like you did in STEP 2
     // YOUR CODE HERE:
-    const weatherData = // ??? How do you convert the response to JSON?
+    const weatherData = await weatherRes.json(); // ??? How do you convert the response to JSON?
 
 
     // -------------------------------------------------------
@@ -106,8 +113,12 @@ app.get("/weather/:city", async (req, res) => {
     // HINT: The current weather info is inside weatherData.current_weather
     //
     // YOUR CODE HERE:
-    res.json(// ??? What part of weatherData should you send back?);
+    res.json(weatherData.current_weather);// ??? What part of weatherData should you send back?);
 
+} catch (error) {
+    res.status(500).json({ message: "Server error" });
+
+}
 });
 
 // ============================================================
